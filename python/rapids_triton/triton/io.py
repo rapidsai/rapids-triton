@@ -37,13 +37,14 @@ def set_unshared_input_data(triton_input, data, protocol='grpc'):
     return None
 
 
-def set_shared_input_data(triton_client, triton_input, data, protocol='grpc'):
+def set_shared_input_data(
+        triton_client, triton_input, data, protocol='grpc', device_id=0):
     input_size = data.size * data.itemsize
 
     input_name = 'input_{}'.format(uuid4().hex)
 
     input_handle = shm.create_shared_memory_region(
-        input_name, input_size, 0
+        input_name, input_size, device_id
     )
 
     shm.set_shared_memory_region(input_handle, [data])
@@ -62,20 +63,31 @@ def set_input_data(
         triton_input,
         data,
         protocol='grpc',
-        shared_mem=None):
+        shared_mem=None,
+        device_id=0):
     if shared_mem is None:
         return set_unshared_input_data(
             triton_input, data, protocol=protocol
         )
     if shared_mem == 'cuda':
         return set_shared_input_data(
-            triton_client, triton_input, data, protocol=protocol
+            triton_client,
+            triton_input,
+            data,
+            protocol=protocol,
+            device_id=device_id
         )
     raise RuntimeError("Unsupported shared memory type")
 
 
 def create_triton_input(
-        triton_client, data, name, dtype, protocol='grpc', shared_mem=None):
+        triton_client,
+        data,
+        name,
+        dtype,
+        protocol='grpc',
+        shared_mem=None,
+        device_id=0):
     if protocol == 'grpc':
         triton_input = triton_grpc.InferInput(name, data.shape, dtype)
     else:
@@ -86,19 +98,25 @@ def create_triton_input(
         triton_input,
         data,
         protocol=protocol,
-        shared_mem=shared_mem
+        shared_mem=shared_mem,
+        device_id=device_id
     )
 
     return TritonInput(name=input_name, input=triton_input)
 
 
-def create_output_handle(triton_client, triton_output, size, shared_mem=None):
+def create_output_handle(
+        triton_client,
+        triton_output,
+        size,
+        shared_mem=None,
+        device_id=0):
     if shared_mem is None:
         return (None, None)
 
     output_name = 'output_{}'.format(uuid4().hex)
     output_handle = shm.create_shared_memory_region(
-        output_name, size, 0
+        output_name, size, device_id
     )
 
     triton_client.register_cuda_shared_memory(
@@ -111,7 +129,8 @@ def create_output_handle(triton_client, triton_output, size, shared_mem=None):
 
 
 def create_triton_output(
-        triton_client, size, name, protocol='grpc', shared_mem=None):
+        triton_client, size, name, protocol='grpc', shared_mem=None,
+        device_id=0):
     """Set up output memory in Triton
 
     Parameters
@@ -133,7 +152,11 @@ def create_triton_output(
         )
 
     output_name, output_handle = create_output_handle(
-        triton_client, triton_output, size, shared_mem=shared_mem
+        triton_client,
+        triton_output,
+        size,
+        shared_mem=shared_mem,
+        device_id=device_id
     )
 
     return TritonOutput(

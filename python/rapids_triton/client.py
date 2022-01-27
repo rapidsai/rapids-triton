@@ -42,23 +42,26 @@ class Client(object):
     def protocol(self):
         return self._protocol
 
-    def create_input(self, data, name, dtype, shared_mem=None):
+    def create_input(
+            self, data, name, dtype, shared_mem=None, device_id=0):
         return create_triton_input(
             self.triton_client,
             data,
             name,
             dtype,
             protocol=self.protocol,
-            shared_mem=shared_mem
+            shared_mem=shared_mem,
+            device_id=device_id
         )
 
-    def create_output(self, size, name, shared_mem=None):
+    def create_output(self, size, name, shared_mem=None, device_id=0):
         return create_triton_output(
             self.triton_client,
             size,
             name,
             protocol=self.protocol,
-            shared_mem=shared_mem
+            shared_mem=shared_mem,
+            device_id=device_id
         )
 
     def wait_for_server(self, timeout):
@@ -87,6 +90,7 @@ class Client(object):
             output_sizes,
             model_version='1',
             shared_mem=None,
+            device_id=0,
             attempts=1):
         model_version = str(model_version)
 
@@ -96,13 +100,15 @@ class Client(object):
                     arr,
                     name,
                     dtype_to_triton_name(arr.dtype),
-                    shared_mem=shared_mem
+                    shared_mem=shared_mem,
+                    device_id=device_id
                 )
                 for name, arr in input_data.items()
             ]
 
             outputs = {
-                name: self.create_output(size, name, shared_mem=shared_mem)
+                name: self.create_output(size, name, shared_mem=shared_mem,
+                    device_id=device_id)
                 for name, size in output_sizes.items()
             }
 
@@ -121,6 +127,7 @@ class Client(object):
                     output_sizes,
                     model_version=model_version,
                     shared_mem=shared_mem,
+                    device_id=device_id,
                     attempts=attempts - 1
                 )
             raise
@@ -148,63 +155,78 @@ class Client(object):
             output_sizes,
             model_version='1',
             shared_mem=None,
+            device_id=0,
             attempts=1):
 
-        model_version = str(model_version)
+        if isinstance(model_version, str):
+            model_versions = [model_version]
+        else:
+            try:
+                model_versions = [str(v) for v in model_version]
+            except TypeError:
+                model_versions = [str(model_version)]
 
         inputs = [
             self.create_input(
                 arr,
                 name,
                 dtype_to_triton_name(arr.dtype),
-                shared_mem=shared_mem
+                shared_mem=shared_mem,
+                device_id=device_id
             )
             for name, arr in input_data.items()
         ]
 
         outputs = {
-            name: self.create_output(size, name, shared_mem=shared_mem)
+            name: self.create_output(
+                size, name, shared_mem=shared_mem, device_id=device_id
+            )
             for name, size in output_sizes.items()
         }
 
-        future_result = Future()
-        def callback(result, error):
-            if error is None:
-                output_arrays = {
-                    name: get_response_data(result, handle, name)
-                    for name, (_, handle, _) in outputs.items()
-                }
+        all_future_results = []
+        for i, version in enumerate(model_versions):
+            all_future_results.append(Future())
+            def create_callback(future_result):
+                def callback(result, error):
+                    if error is None:
+                        output_arrays = {
+                            name: get_response_data(result, handle, name)
+                            for name, (_, handle, _) in outputs.items()
+                        }
 
-                future_result.set_result(output_arrays)
+                        future_result.set_result(output_arrays)
 
-                for input_ in inputs:
-                    if input_.name is not None:
-                        self.triton_client.unregister_cuda_shared_memory(
-                            name=input_.name
-                        )
-                for output_ in outputs.values():
-                    if output_.name is not None:
-                        self.triton_client.unregister_cuda_shared_memory(
-                            name=output_.name
-                        )
-            else:
-                if isinstance(error, triton_utils.InferenceServerException):
-                    if attempts > 1:
-                        return self.predict(
-                            model_name,
-                            input_data,
-                            output_sizes,
-                            model_version=model_version,
-                            shared_mem=shared_mem,
-                            attempts=attempts - 1
-                        )
-                future_result.set_exception(error)
+                        for input_ in inputs:
+                            if input_.name is not None:
+                                self.triton_client.unregister_cuda_shared_memory(
+                                    name=input_.name
+                                )
+                        for output_ in outputs.values():
+                            if output_.name is not None:
+                                self.triton_client.unregister_cuda_shared_memory(
+                                    name=output_.name
+                                )
+                    else:
+                        if isinstance(error, triton_utils.InferenceServerException):
+                            if attempts > 1:
+                                return self.predict_async(
+                                    model_name,
+                                    input_data,
+                                    output_sizes,
+                                    model_version=[version],
+                                    shared_mem=shared_mem,
+                                    device_id=device_id,
+                                    attempts=attempts - 1
+                                )
+                        future_result.set_exception(error)
+                return callback
 
-        self.triton_client.async_infer(
-            model_name,
-            model_version=model_version,
-            inputs=[input_.input for input_ in inputs],
-            outputs=[output_.output for output_ in outputs.values()],
-            callback=callback
-        )
-        return future_result
+            self.triton_client.async_infer(
+                model_name,
+                model_version=version,
+                inputs=[input_.input for input_ in inputs],
+                outputs=[output_.output for output_ in outputs.values()],
+                callback=create_callback(all_future_results[-1])
+            )
+        return all_future_results
