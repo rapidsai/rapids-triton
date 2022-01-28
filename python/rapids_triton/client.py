@@ -177,17 +177,17 @@ class Client(object):
             for name, arr in input_data.items()
         ]
 
-        outputs = {
-            name: self.create_output(
-                size, name, shared_mem=shared_mem, device_id=device_id
-            )
-            for name, size in output_sizes.items()
-        }
-
         all_future_results = []
         for i, version in enumerate(model_versions):
+            cur_outputs = {
+                name: self.create_output(
+                    size, name, shared_mem=shared_mem, device_id=device_id
+                )
+                for name, size in output_sizes.items()
+            }
+
             all_future_results.append(Future())
-            def create_callback(future_result):
+            def create_callback(future_result, outputs):
                 def callback(result, error):
                     if error is None:
                         output_arrays = {
@@ -197,11 +197,12 @@ class Client(object):
 
                         future_result.set_result(output_arrays)
 
-                        for input_ in inputs:
-                            if input_.name is not None:
-                                self.triton_client.unregister_cuda_shared_memory(
-                                    name=input_.name
-                                )
+                        # TODO (whicks)
+                        # for input_ in inputs:
+                        #     if input_.name is not None:
+                        #         self.triton_client.unregister_cuda_shared_memory(
+                        #             name=input_.name
+                        #         )
                         for output_ in outputs.values():
                             if output_.name is not None:
                                 self.triton_client.unregister_cuda_shared_memory(
@@ -226,7 +227,7 @@ class Client(object):
                 model_name,
                 model_version=version,
                 inputs=[input_.input for input_ in inputs],
-                outputs=[output_.output for output_ in outputs.values()],
-                callback=create_callback(all_future_results[-1])
+                outputs=[output_.output for output_ in cur_outputs.values()],
+                callback=create_callback(all_future_results[-1], cur_outputs)
             )
         return all_future_results
