@@ -30,10 +30,11 @@ auto* model_finalize(TRITONBACKEND_Model* model)
 {
   auto* result = static_cast<TRITONSERVER_Error*>(nullptr);
   try {
+    auto name = get_model_name(*model);
     auto model_state = get_model_state<ModelState>(*model);
     if (model_state != nullptr) { model_state->get_shared_state()->unload(); }
 
-    log_info(__FILE__, __LINE__) << "TRITONBACKEND_ModelFinalize: delete model state";
+    log_info(__FILE__, __LINE__) << "TRITONBACKEND_ModelFinalize: delete " << name << " model state";
 
     delete model_state;
   } catch (TritonException& err) {

@@ -29,11 +29,13 @@ auto* instance_finalize(TRITONBACKEND_ModelInstance* instance)
 {
   auto* result = static_cast<TRITONSERVER_Error*>(nullptr);
   try {
+    auto name            = get_model_instance_name(*instance);
     auto* instance_state = get_instance_state<ModelInstanceState>(*instance);
     if (instance_state != nullptr) {
       instance_state->unload();
 
-      log_info(__FILE__, __LINE__) << "TRITONBACKEND_ModelInstanceFinalize: delete instance state";
+      log_info(__FILE__, __LINE__) << "TRITONBACKEND_ModelInstanceFinalize: delete " << name
+                                   << " instance state";
 
       delete instance_state;
     }
