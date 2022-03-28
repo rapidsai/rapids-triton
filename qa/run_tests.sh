@@ -72,6 +72,7 @@ start_server() {
     docker run $DOCKER_ARGS $TRITON_IMAGE > /dev/null
   else
     tritonserver $SERVER_ARGS > $SERVER_LOG 2>&1 &
+    # tritonserver $SERVER_ARGS &
     TRITON_PID="$!"
   fi
 }
