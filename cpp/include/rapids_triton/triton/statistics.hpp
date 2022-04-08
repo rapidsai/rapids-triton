@@ -81,6 +81,7 @@ inline void report_statistics(TRITONBACKEND_ModelInstance& instance,
                               time_point compute_end_time,
                               time_point end_time)
 {
+  auto log_stream = log_info();
   log_stream << "BATCH count: " << request_count;
   log_stream << " BATCH Input: " << compute_start_time.time_since_epoch().count() - start_time.time_since_epoch().count();
   log_stream << " BATCH Infer: " << compute_end_time.time_since_epoch().count() - compute_start_time.time_since_epoch().count();
