@@ -20,6 +20,7 @@
 #include <chrono>
 #include <cstddef>
 #include <rapids_triton/exceptions.hpp>
+#include <rapids_triton/triton/logging.hpp>
 
 namespace triton {
 namespace backend {
@@ -46,6 +47,10 @@ inline void report_statistics(TRITONBACKEND_ModelInstance& instance,
                               time_point compute_end_time,
                               time_point end_time)
 {
+  auto log_stream = log_info();
+  log_stream << "Input: " << compute_start_time.time_since_epoch().count() - start_time.time_since_epoch().count();
+  log_stream << " Infer: " << compute_end_time.time_since_epoch().count() - compute_start_time.time_since_epoch().count();
+  log_stream << " Output: " << end_time.time_since_epoch().count() - compute_end_time.time_since_epoch().count();
   triton_check(
     TRITONBACKEND_ModelInstanceReportStatistics(&instance,
                                                 &request,
