@@ -1,3 +1,4 @@
+name: "identity"
 backend: "rapids-identity"
 max_batch_size: 32768
 input [
