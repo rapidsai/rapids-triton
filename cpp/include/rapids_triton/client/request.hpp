@@ -17,12 +17,15 @@
 #pragma once
 
 #include <rapids_triton/exceptions.hpp>
+#include <rapids_triton/tensor/dtype.hpp>
 #include <rapids_triton/triton/logging.hpp>
 
 #include <vector>
 
 namespace triton {
 namespace client {
+
+using namespace triton::backend::rapids;
 
 class TritonRequest {
 public:
@@ -37,6 +40,7 @@ public:
     void set_input();
 
     // call this for as many outputs are needed
+    template <typename T>
     T* get_output();
 
 private:

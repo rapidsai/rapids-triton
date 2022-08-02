@@ -19,8 +19,8 @@
 #include "server.hpp"
 
 #include <rapids_triton/exceptions.hpp>
-#include <rapids_triton/triton/logging.hpp>
 #include <rapids_triton/tensor/dtype.hpp>
+#include <rapids_triton/triton/logging.hpp>
 
 // Disable class-memaccess warning to facilitate compilation with gcc>7
 // https://github.com/Tencent/rapidjson/issues/1700
