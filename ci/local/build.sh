@@ -9,9 +9,9 @@ EXAMPLE_TAG=rapids_triton_identity \
   $REPODIR/build.sh
 if [ -z $CUDA_VISIBLE_DEVICES ]
 then
-  docker run --gpus all --rm rapids_triton_identity_test
+  docker run -v "${REPODIR}/qa/logs:/qa/logs" --gpus all --rm rapids_triton_identity_test
 else
-  docker run --gpus $CUDA_VISIBLE_DEVICES --rm rapids_triton_identity_test
+  docker run -v "${REPODIR}/qa/logs:/qa/logs" --gpus $CUDA_VISIBLE_DEVICES --rm rapids_triton_identity_test
 fi
 EXAMPLE_TAG=rapids_triton_identity:cpu \
   TEST_TAG=rapids_triton_identity_test:cpu \
