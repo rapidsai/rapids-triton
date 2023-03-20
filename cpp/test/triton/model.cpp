@@ -14,4 +14,42 @@
  * limitations under the License.
  */
 
-#include <rapids_triton/triton/model.hpp>
+#include <gtest/gtest.h>
+#include <string>
+#include <rapids_triton/model/shared_state.hpp>
+
+namespace triton {
+namespace backend {
+namespace rapids {
+
+bool TestBoolString(std::string b){
+  auto model_config = std::make_unique<common::TritonJson::Value>(common::TritonJson::ValueType::OBJECT);
+  model_config->AddInt("max_batch_size", 1);
+  model_config->Add("output", common::TritonJson::Value(common::TritonJson::ValueType::ARRAY));
+  auto params = common::TritonJson::Value(common::TritonJson::ValueType::OBJECT);
+  auto string_value = common::TritonJson::Value(common::TritonJson::ValueType::OBJECT);
+  string_value.AddString("string_value", b);
+  params.Add("some_bool", std::move(string_value));
+  model_config->Add("parameters",std::move(params));
+  SharedModelState s(std::move(model_config));
+  return s.get_config_param<bool>("some_bool");
+}
+
+TEST(RapidsTriton, bool_param)
+{
+  EXPECT_TRUE(TestBoolString("true"));
+  EXPECT_FALSE(TestBoolString("false"));
+  EXPECT_THROW(
+    {
+      try {
+        TestBoolString("True");
+      } catch (const TritonException& e) {
+        EXPECT_STREQ("Expected 'true' or 'false' for parameter 'some_bool', got: 'True'", e.what());
+        throw;
+      }
+    },
+    TritonException);
+}
+}  // namespace rapids
+}  // namespace backend
+}  // namespace triton

@@ -159,7 +159,15 @@ struct SharedModelState {
       auto input_stream = std::istringstream{string_repr};
 
       if constexpr (std::is_same_v<T, bool>) {
-        input_stream >> std::boolalpha >> result;
+        if (string_repr == "true") {
+          result = true;
+        } else if (string_repr == "false") {
+          result = false;
+        } else {
+          throw TritonException(
+            Error::Internal,
+            "Expected 'true' or 'false' for parameter '" + name + "', got: '" + string_repr + "'");
+        }
       } else {
         input_stream >> result;
       }
