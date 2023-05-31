@@ -17,7 +17,6 @@
 #pragma once
 #ifdef TRITON_ENABLE_GPU
 #include <cuda_runtime_api.h>
-#include <raft/cudart_utils.h>
 #endif
 
 #include <cstddef>
@@ -39,11 +38,7 @@ void copy(T* dst,
           MemoryType src_type)
 {
   if (dst_type == DeviceMemory || src_type == DeviceMemory) {
-    try {
-      raft::copy(dst, src, len, stream);
-    } catch (raft::cuda_error const& err) {
-      throw TritonException(Error::Internal, err.what());
-    }
+    cuda_check(cudaMemcpyAsync(dst, src, len, stream));
   } else {
     std::memcpy(dst, src, len * sizeof(T));
   }
