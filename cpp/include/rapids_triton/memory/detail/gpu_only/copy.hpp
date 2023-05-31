@@ -38,7 +38,7 @@ void copy(T* dst,
           MemoryType src_type)
 {
   if (dst_type == DeviceMemory || src_type == DeviceMemory) {
-    cuda_check(cudaMemcpyAsync(dst, src, len, stream));
+    cuda_check(cudaMemcpyAsync(dst, src, len, cudaMemcpyDefault, stream));
   } else {
     std::memcpy(dst, src, len * sizeof(T));
   }
