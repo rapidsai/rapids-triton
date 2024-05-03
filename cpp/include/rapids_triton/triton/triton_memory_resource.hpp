@@ -39,7 +39,6 @@ struct triton_memory_resource final : public rmm::mr::device_memory_resource {
   }
 
   bool supports_streams() const noexcept override { return false; }
-  bool supports_get_mem_info() const noexcept override { return false; }
   auto* get_triton_manager() const noexcept { return manager_; }
 
  private:
@@ -73,11 +72,6 @@ struct triton_memory_resource final : public rmm::mr::device_memory_resource {
   {
     auto* other_triton_mr = dynamic_cast<triton_memory_resource const*>(&other);
     return (other_triton_mr != nullptr && other_triton_mr->get_triton_manager() == manager_);
-  }
-
-  std::pair<std::size_t, std::size_t> do_get_mem_info(rmm::cuda_stream_view stream) const override
-  {
-    return {0, 0};
   }
 };
 
