@@ -8,4 +8,4 @@ dependencies:
   - libstdcxx-ng<=11.2.0
   - libgcc-ng<=11.2.0
   - ninja
-  - rapidjson
+  - rapidjson>=1.1.0,<1.1.0.post*
