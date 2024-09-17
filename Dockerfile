@@ -85,7 +85,7 @@ RUN cmake \
 
 ENV CCACHE_DIR=/ccache
 
-RUN --mount=type=cache,target=/ccache/ ninja install
+RUN --mount=type=cache,target=/ccache/ ninja -j16 install
 
 FROM base as test-install
 
