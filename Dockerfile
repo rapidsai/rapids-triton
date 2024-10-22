@@ -28,7 +28,7 @@ ARG TRITON_ENABLE_GPU=ON
 
 FROM ${BASE_IMAGE} as base
 
-ENV PATH="/root/miniconda3/bin:${PATH}"
+ENV PATH="/root/miniforge3/bin:${PATH}"
 
 RUN apt-get update \
     && apt-get install --no-install-recommends -y wget patchelf \
@@ -38,18 +38,18 @@ RUN apt-get update \
 ENV PYTHONDONTWRITEBYTECODE=true
 
 RUN wget \
-    https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh \
+    https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Linux-x86_64.sh \
     && mkdir /root/.conda \
-    && bash Miniconda3-latest-Linux-x86_64.sh -b \
-    && rm -f Miniconda3-latest-Linux-x86_64.sh 
+    && bash Miniforge3-Linux-x86_64.sh -b \
+    && rm -f Miniforge3-Linux-x86_64.sh
 
 COPY ./conda/environments/rapids_triton_dev.yml /environment.yml
 
 RUN conda env update -f /environment.yml \
     && rm /environment.yml \
     && conda clean -afy \
-    && find /root/miniconda3/ -follow -type f -name '*.pyc' -delete \
-    && find /root/miniconda3/ -follow -type f -name '*.js.map' -delete
+    && find /root/miniforge3/ -follow -type f -name '*.pyc' -delete \
+    && find /root/miniforge3/ -follow -type f -name '*.js.map' -delete
 
 ENV PYTHONDONTWRITEBYTECODE=false
 
@@ -94,8 +94,8 @@ COPY ./conda/environments/rapids_triton_test.yml /environment.yml
 RUN conda env update -f /environment.yml \
     && rm /environment.yml \
     && conda clean -afy \
-    && find /root/miniconda3/ -follow -type f -name '*.pyc' -delete \
-    && find /root/miniconda3/ -follow -type f -name '*.js.map' -delete
+    && find /root/miniforge3/ -follow -type f -name '*.pyc' -delete \
+    && find /root/miniforge3/ -follow -type f -name '*.js.map' -delete
 
 COPY ./python /rapids_triton
 
@@ -104,7 +104,7 @@ RUN conda run -n rapids_triton_test pip install /rapids_triton \
 
 FROM build-stage as test-stage
 
-COPY --from=test-install /root/miniconda3 /root/miniconda3
+COPY --from=test-install /root/miniforge3 /root/miniforge3
 
 ENV TEST_EXE=/rapids_triton/build/test_rapids_triton
 
