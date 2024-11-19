@@ -15,7 +15,10 @@
  */
 
 #pragma once
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 #include <triton/backend/backend_common.h>
+#pragma GCC diagnostic pop
 #include <triton/core/tritonbackend.h>
 #include <cstddef>
 #include <cstdint>

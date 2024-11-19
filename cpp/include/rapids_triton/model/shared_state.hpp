@@ -28,7 +28,10 @@
 #include <utility>
 #include <vector>
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 #include <triton/backend/backend_common.h>
+#pragma GCC diagnostic pop
 #include <rapids_triton/batch/batch.hpp>
 #include <rapids_triton/tensor/tensor.hpp>
 #include <rapids_triton/triton/config.hpp>

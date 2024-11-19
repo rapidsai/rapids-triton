@@ -18,7 +18,10 @@
 #include <names.h>
 #include <shared_state.h>
 #include <stdint.h>
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 #include <triton/backend/backend_common.h>
+#pragma GCC diagnostic pop
 #include <triton/backend/backend_model.h>
 #include <triton/backend/backend_model_instance.h>
 

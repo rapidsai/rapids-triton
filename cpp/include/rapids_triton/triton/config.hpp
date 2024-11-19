@@ -19,7 +19,10 @@
 #include <stdint.h>
 #include <cstddef>
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 #include <triton/backend/backend_common.h>
+#pragma GCC diagnostic pop
 #include <rapids_triton/exceptions.hpp>
 #include <rapids_triton/utils/narrow.hpp>
 

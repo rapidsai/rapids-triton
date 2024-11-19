@@ -20,7 +20,10 @@
 #else
 #include <rapids_triton/cpu_only/cuda_runtime_replacement.hpp>
 #endif
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 #include <triton/backend/backend_common.h>
+#pragma GCC diagnostic pop
 
 #include <rapids_triton/build_control.hpp>
 #include <rapids_triton/exceptions.hpp>
