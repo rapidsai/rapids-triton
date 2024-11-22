@@ -38,7 +38,6 @@ struct triton_memory_resource final : public rmm::mr::device_memory_resource {
   {
   }
 
-  bool supports_streams() const noexcept override { return false; }
   auto* get_triton_manager() const noexcept { return manager_; }
 
  private:
