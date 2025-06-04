@@ -15,7 +15,7 @@
 #=============================================================================
 
 # TODO(wphicks): Pass in version
-function(find_and_configure_rapidjson VERSION)
+function(find_and_configure_rapidjson VERSION TAG)
 
     rapids_cpm_find(rapidjson ${VERSION}
         GLOBAL_TARGETS      rapidjson::rapidjson
@@ -23,8 +23,7 @@ function(find_and_configure_rapidjson VERSION)
         INSTALL_EXPORT_SET  rapids_triton-exports
         CPM_ARGS
             GIT_REPOSITORY https://github.com/Tencent/rapidjson
-            GIT_TAG "v${VERSION}"
-            GIT_SHALLOW ON
+            GIT_TAG "${TAG}"
             OPTIONS
               "RAPIDJSON_BUILD_DOC OFF"
               "RAPIDJSON_BUILD_EXAMPLES OFF"
@@ -34,4 +33,4 @@ function(find_and_configure_rapidjson VERSION)
 
 endfunction()
 
-find_and_configure_rapidjson("1.1.0")
+find_and_configure_rapidjson(1.1.0 24b5e7a8b27f42fa16b96fc70aade9106cf7102f)

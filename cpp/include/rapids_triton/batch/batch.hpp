@@ -30,6 +30,7 @@
 #include <iterator>
 #include <memory>
 #include <numeric>
+#include <optional>
 #include <rapids_triton/build_control.hpp>
 #include <rapids_triton/exceptions.hpp>
 #include <rapids_triton/memory/buffer.hpp>
