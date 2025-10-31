@@ -23,13 +23,10 @@ if(CMAKE_COMPILER_IS_GNUCXX)
     list(APPEND RAPIDS_TRITON_CXX_FLAGS -Wall -Werror -Wno-unknown-pragmas -Wno-error=deprecated-declarations)
 endif()
 
-list(APPEND RAPIDS_TRITON_CUDA_FLAGS --expt-extended-lambda --expt-relaxed-constexpr)
-
-# set warnings as errors
-if(CMAKE_CUDA_COMPILER_VERSION VERSION_GREATER_EQUAL 11.2.0)
-    list(APPEND RAPIDS_TRITON_CUDA_FLAGS -Werror=all-warnings)
-endif()
-list(APPEND RAPIDS_TRITON_CUDA_FLAGS -Xcompiler=-Wall,-Werror,-Wno-error=deprecated-declarations)
+list(APPEND RAPIDS_TRITON_CUDA_FLAGS
+     --expt-extended-lambda --expt-relaxed-constexpr -Werror=all-warnings
+     -Xcompiler=-Wall,-Werror,-Wno-error=deprecated-declarations
+)
 
 # Option to enable line info in CUDA device compilation to allow introspection when profiling / memchecking
 if(CUDA_ENABLE_LINEINFO)
