@@ -17,8 +17,8 @@
 #ifdef TRITON_ENABLE_GPU
 #include <cuda_runtime_api.h>
 #include <rmm/cuda_device.hpp>
-#include <rmm/mr/device/cuda_memory_resource.hpp>
-#include <rmm/mr/device/per_device_resource.hpp>
+#include <rmm/mr/cuda_memory_resource.hpp>
+#include <rmm/mr/per_device_resource.hpp>
 #endif
 
 #include <gmock/gmock.h>

@@ -24,8 +24,8 @@
 #include <rapids_triton/triton/device.hpp>
 #include <rapids_triton/triton/triton_memory_resource.hpp>
 #include <rmm/cuda_device.hpp>
-#include <rmm/mr/device/cuda_memory_resource.hpp>
-#include <rmm/mr/device/per_device_resource.hpp>
+#include <rmm/mr/cuda_memory_resource.hpp>
+#include <rmm/mr/per_device_resource.hpp>
 
 namespace triton {
 namespace backend {
