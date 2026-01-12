@@ -57,7 +57,7 @@ struct triton_memory_resource final : public rmm::mr::device_memory_resource {
     return ptr;
   }
 
-  void do_deallocate(void* ptr, std::size_t bytes, rmm::cuda_stream_view stream)
+  void do_deallocate(void* ptr, std::size_t bytes, rmm::cuda_stream_view stream) noexcept override
   {
     if (manager_ == nullptr) {
       fallback_->deallocate(ptr, bytes, stream);
