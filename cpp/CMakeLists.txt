@@ -15,8 +15,8 @@
 #=============================================================================
 
 cmake_minimum_required(VERSION 3.21 FATAL_ERROR)
-set(rapids-cmake-version 25.06)
-file(DOWNLOAD https://raw.githubusercontent.com/rapidsai/rapids-cmake/branch-25.06/RAPIDS.cmake
+set(rapids-cmake-version 25.12)
+file(DOWNLOAD https://raw.githubusercontent.com/rapidsai/rapids-cmake/refs/tags/v25.12.00/RAPIDS.cmake
     ${CMAKE_BINARY_DIR}/RAPIDS.cmake)
 include(${CMAKE_BINARY_DIR}/RAPIDS.cmake)
 include(rapids-cmake)
