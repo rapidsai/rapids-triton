@@ -37,11 +37,9 @@ TEST(RapidsTriton, set_memory_resource)
 #ifdef TRITON_ENABLE_GPU
   auto device_id = int{};
   cuda_check(cudaGetDevice(&device_id));
-  EXPECT_EQ(rmm::mr::get_current_device_resource()->is_equal(rmm::mr::cuda_memory_resource{}),
-            true);
+  EXPECT_TRUE(rmm::mr::get_current_device_resource_ref() == rmm::mr::cuda_memory_resource{});
   setup_memory_resource(device_id);
-  EXPECT_EQ(rmm::mr::get_current_device_resource()->is_equal(rmm::mr::cuda_memory_resource{}),
-            false);
+  EXPECT_TRUE(rmm::mr::get_current_device_resource_ref() != rmm::mr::cuda_memory_resource{});
 #else
   setup_memory_resource(0);
 #endif

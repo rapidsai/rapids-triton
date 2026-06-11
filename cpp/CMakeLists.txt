@@ -39,9 +39,9 @@ option(DISABLE_DEPRECATION_WARNINGS "Disable depreaction warnings " ON)
 option(NVTX "Enable nvtx markers" OFF)
 option(TRITON_ENABLE_STATS "Enable statistics collection in Triton" ON)
 set(TRITON_REPO_ORGANIZATION "https://github.com/triton-inference-server" CACHE STRING "Git repository to pull from")
-set(TRITON_COMMON_REPO_TAG "r25.05" CACHE STRING "Tag for triton-inference-server/common repo")
-set(TRITON_CORE_REPO_TAG "r25.05" CACHE STRING "Tag for triton-inference-server/core repo")
-set(TRITON_BACKEND_REPO_TAG "r25.05" CACHE STRING "Tag for triton-inference-server/backend repo")
+set(TRITON_COMMON_REPO_TAG "r26.05" CACHE STRING "Tag for triton-inference-server/common repo")
+set(TRITON_CORE_REPO_TAG "r26.05" CACHE STRING "Tag for triton-inference-server/core repo")
+set(TRITON_BACKEND_REPO_TAG "r26.05" CACHE STRING "Tag for triton-inference-server/backend repo")
 
 message(VERBOSE "RAPIDS_TRITON: Build RAPIDS_TRITON unit-tests: ${BUILD_TESTS}")
 message(VERBOSE "RAPIDS_TRITON: Enable detection of conda environment for dependencies: ${DETECT_CONDA_ENV}")
@@ -61,10 +61,10 @@ message(VERBOSE "RAPIDS_TRITON: Triton backend repo tag: ${TRITON_BACKEND_REPO_T
 # - Project Initialization ---------------------------------------------------
 
 if(TRITON_ENABLE_GPU)
-  rapids_cuda_init_architectures(RAPIDS_TRITON)
-  project(RAPIDS_TRITON VERSION 25.06.00 LANGUAGES CXX CUDA)
+  rapids_cuda_init_architectures(RAPIDS_TRITON "")
+  project(RAPIDS_TRITON VERSION 26.06.00 LANGUAGES CXX CUDA)
 else()
-  project(RAPIDS_TRITON VERSION 25.06.00 LANGUAGES CXX)
+  project(RAPIDS_TRITON VERSION 26.06.00 LANGUAGES CXX)
 endif()
 
 

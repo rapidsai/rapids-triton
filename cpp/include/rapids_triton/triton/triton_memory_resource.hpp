@@ -22,18 +22,18 @@
 #include <cstdint>
 #include <rapids_triton/exceptions.hpp>
 #include <rapids_triton/triton/device.hpp>
-#include <rmm/cuda_stream_view.hpp>
-#include <rmm/mr/device_memory_resource.hpp>
+#include <rmm/aligned.hpp>
+#include <cuda/memory_resource>
 #include <stdexcept>
 #include <utility>
 
 namespace triton {
 namespace backend {
 namespace rapids {
-struct triton_memory_resource final : public rmm::mr::device_memory_resource {
+struct triton_memory_resource {
   triton_memory_resource(TRITONBACKEND_MemoryManager* manager,
                          device_id_t device_id,
-                         rmm::mr::device_memory_resource* fallback)
+                         cuda::mr::any_resource<cuda::mr::device_accessible> fallback)
     : manager_{manager}, device_id_{device_id}, fallback_{fallback}
   {
   }
@@ -43,13 +43,15 @@ struct triton_memory_resource final : public rmm::mr::device_memory_resource {
  private:
   TRITONBACKEND_MemoryManager* manager_;
   std::int64_t device_id_;
-  rmm::mr::device_memory_resource* fallback_;
+  cuda::mr::any_resource<cuda::mr::device_accessible> fallback_;
 
-  void* do_allocate(std::size_t bytes, rmm::cuda_stream_view stream) override
+ public:
+  void* allocate(cuda::stream_ref stream, std::size_t bytes,
+                 std::size_t alignment = rmm::CUDA_ALLOCATION_ALIGNMENT)
   {
     auto* ptr = static_cast<void*>(nullptr);
     if (manager_ == nullptr) {
-      ptr = fallback_->allocate(bytes, stream);
+      ptr = fallback_.allocate(stream, bytes, alignment);
     } else {
       triton_check(TRITONBACKEND_MemoryManagerAllocate(
         manager_, &ptr, TRITONSERVER_MEMORY_GPU, device_id_, static_cast<std::uint64_t>(bytes)));
@@ -57,22 +59,40 @@ struct triton_memory_resource final : public rmm::mr::device_memory_resource {
     return ptr;
   }
 
-  void do_deallocate(void* ptr, std::size_t bytes, rmm::cuda_stream_view stream) noexcept override
+  void deallocate(cuda::stream_ref stream, void* ptr, std::size_t bytes,
+                  std::size_t alignment = rmm::CUDA_ALLOCATION_ALIGNMENT)
   {
     if (manager_ == nullptr) {
-      fallback_->deallocate(ptr, bytes, stream);
+      fallback_.deallocate(stream, ptr, bytes, alignment);
     } else {
       triton_check(
         TRITONBACKEND_MemoryManagerFree(manager_, ptr, TRITONSERVER_MEMORY_GPU, device_id_));
     }
   }
 
-  bool do_is_equal(rmm::mr::device_memory_resource const& other) const noexcept override
-  {
-    auto* other_triton_mr = dynamic_cast<triton_memory_resource const*>(&other);
-    return (other_triton_mr != nullptr && other_triton_mr->get_triton_manager() == manager_);
+  void* allocate_sync(std::size_t bytes,
+                      std::size_t alignment = rmm::CUDA_ALLOCATION_ALIGNMENT) {
+    return allocate(cuda::stream_ref{cudaStream_t{nullptr}}, bytes, alignment);
   }
+
+  void deallocate_sync(void* ptr, std::size_t bytes,
+                       std::size_t alignment = rmm::CUDA_ALLOCATION_ALIGNMENT) noexcept {
+    deallocate(cuda::stream_ref{cudaStream_t{nullptr}}, ptr, bytes, alignment);
+  }
+
+  bool operator==(const triton_memory_resource& other) const {
+    return this == &other;
+  }
+
+  bool operator!=(const triton_memory_resource& other) const {
+    return !(*this == other);
+  }
+
+  constexpr friend void get_property(const triton_memory_resource&, cuda::mr::device_accessible) noexcept {}
 };
+
+static_assert(cuda::mr::resource_with<triton_memory_resource, cuda::mr::device_accessible>,
+              "triton_memory_resource is not a valid cuda::mr::resource");
 
 }  // namespace rapids
 }  // namespace backend
