@@ -1,5 +1,5 @@
 #=============================================================================
-# Copyright (c) 2021, NVIDIA CORPORATION.
+# Copyright (c) 2021-2026, NVIDIA CORPORATION.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,8 +15,28 @@
 #=============================================================================
 
 function(find_and_configure_rmm)
-  include(${rapids-cmake-dir}/cpm/rmm.cmake)
-  rapids_cpm_rmm()
+    set(oneValueArgs VERSION FORK PINNED_TAG)
+    cmake_parse_arguments(PKG "${options}" "${oneValueArgs}"
+                          "${multiValueArgs}" ${ARGN} )
+
+    rapids_cpm_find(rmm ${PKG_VERSION}
+      GLOBAL_TARGETS      rmm::rmm rmm::rmm_logger rmm::rmm_logger_impl
+      BUILD_EXPORT_SET    rapids_triton-exports
+      INSTALL_EXPORT_SET  rapids_triton-exports
+        CPM_ARGS
+            GIT_REPOSITORY https://github.com/${PKG_FORK}/rmm.git
+            GIT_TAG        ${PKG_PINNED_TAG}
+            SOURCE_SUBDIR  cpp
+            OPTIONS
+              "BUILD_TESTS OFF"
+              "BUILD_BENCHMARKS OFF"
+    )
+
+  message(VERBOSE "RAPIDS_TRITON: Using RMM located in ${rmm_SOURCE_DIR}")
+
 endfunction()
 
-find_and_configure_rmm()
+find_and_configure_rmm(VERSION    26.06
+                       FORK       rapidsai
+                       PINNED_TAG v26.06.00
+                       )

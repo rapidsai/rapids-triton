@@ -37,13 +37,10 @@ function(find_and_configure_raft)
 
 endfunction()
 
-set(RAPIDS_TRITON_MIN_VERSION_raft "${RAPIDS_TRITON_VERSION_MAJOR}.${RAPIDS_TRITON_VERSION_MINOR}.00")
-set(RAPIDS_TRITON_BRANCH_VERSION_raft "${RAPIDS_TRITON_VERSION_MAJOR}.${RAPIDS_TRITON_VERSION_MINOR}")
-
 # Change pinned tag here to test a commit in CI
 # To use a different RAFT locally, set the CMake variable
 # CPM_raft_SOURCE=/path/to/local/raft
-find_and_configure_raft(VERSION    ${RAPIDS_TRITON_MIN_VERSION_raft}
+find_and_configure_raft(VERSION    26.06
                         FORK       rapidsai
-                        PINNED_TAG branch-${RAPIDS_TRITON_BRANCH_VERSION_raft}
+                        PINNED_TAG v26.06.00
                         )
