@@ -1,5 +1,5 @@
 #=============================================================================
-# Copyright (c) 2021-2022, NVIDIA CORPORATION.
+# Copyright (c) 2021-2026, NVIDIA CORPORATION.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,8 +15,8 @@
 #=============================================================================
 
 cmake_minimum_required(VERSION 3.21 FATAL_ERROR)
-set(rapids-cmake-version 25.12)
-file(DOWNLOAD https://raw.githubusercontent.com/rapidsai/rapids-cmake/refs/tags/v25.12.00/RAPIDS.cmake
+set(rapids-cmake-version 26.06)
+file(DOWNLOAD https://raw.githubusercontent.com/rapidsai/rapids-cmake/refs/tags/v26.06.00/RAPIDS.cmake
     ${CMAKE_BINARY_DIR}/RAPIDS.cmake)
 include(${CMAKE_BINARY_DIR}/RAPIDS.cmake)
 include(rapids-cmake)
