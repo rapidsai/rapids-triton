@@ -19,6 +19,7 @@
 #include <rapids_triton/memory/detail/owned_device_buffer.hpp>
 #include <rapids_triton/triton/device.hpp>
 #include <rapids_triton/utils/device_setter.hpp>
+#include <rapids_triton/utils/safe_multiply.hpp>
 #include <rmm/device_buffer.hpp>
 
 namespace triton {
@@ -32,7 +33,9 @@ struct owned_device_buffer<T, true> {
   owned_device_buffer(device_id_t device_id, std::size_t size, cudaStream_t stream)
     : data_{[&device_id, &size, &stream]() {
       auto device_context = device_setter{device_id};
-      return rmm::device_buffer{size * sizeof(T), rmm::cuda_stream_view{stream}};
+      return rmm::device_buffer{
+        safe_multiply<std::size_t>(size, sizeof(T)),
+        rmm::cuda_stream_view{stream}};
     }()}
   {
   }
