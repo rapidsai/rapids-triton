@@ -42,6 +42,7 @@
 #include <rapids_triton/triton/responses.hpp>
 #include <rapids_triton/triton/statistics.hpp>
 #include <rapids_triton/utils/narrow.hpp>
+#include <rapids_triton/utils/safe_multiply.hpp>
 #include <string>
 #include <vector>
 
@@ -133,7 +134,8 @@ struct Batch {
   {
     auto shape = get_input_shape<T>(name);
     auto size_bytes =
-      sizeof(T) * std::reduce(shape.begin(), shape.end(), std::size_t{1}, std::multiplies<>());
+      safe_multiply<std::size_t>(
+          sizeof(T), std::reduce(shape.begin(), shape.end(), std::size_t{1}, safe_multiply<std::size_t>));
     auto allowed_memory_configs = std::vector<std::pair<MemoryType, int64_t>>{};
     if (memory_type.has_value()) {
       allowed_memory_configs.emplace_back(memory_type.value(), device_id);
@@ -206,7 +208,7 @@ struct Batch {
                             "At least one input must be retrieved before any output");
     }
     auto shape       = get_output_shape_(name, batch_size_.value());
-    auto buffer_size = std::reduce(shape.begin(), shape.end(), std::size_t{1}, std::multiplies<>());
+    auto buffer_size = std::reduce(shape.begin(), shape.end(), std::size_t{1}, safe_multiply<std::size_t>);
     auto final_memory_type = MemoryType{};
     if (memory_type.has_value()) {
       final_memory_type = memory_type.value();
