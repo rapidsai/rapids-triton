@@ -20,6 +20,7 @@
 #include <chrono>
 #include <cstddef>
 #include <cstdint>
+#include <exception>
 #include <rapids_triton/batch/batch.hpp>
 #include <rapids_triton/exceptions.hpp>
 #include <rapids_triton/triton/model.hpp>
@@ -100,6 +101,11 @@ auto* execute(TRITONBACKEND_ModelInstance* instance,
       model.predict(batch);
     } catch (TritonException& err) {
       predict_err = err.error();
+    } catch (std::exception const& err) {
+      predict_err = TRITONSERVER_ErrorNew(Error::Internal, err.what());
+    } catch (...) {
+      predict_err =
+        TRITONSERVER_ErrorNew(Error::Internal, "prediction failed with unknown exception");
     }
 
     auto& compute_start_time = batch.compute_start_time();
@@ -111,6 +117,10 @@ auto* execute(TRITONBACKEND_ModelInstance* instance,
       *instance, request_count, start_time, compute_start_time, compute_end_time, end_time);
   } catch (TritonException& err) {
     result = err.error();
+  } catch (std::exception const& err) {
+    result = TRITONSERVER_ErrorNew(Error::Internal, err.what());
+  } catch (...) {
+    result = TRITONSERVER_ErrorNew(Error::Internal, "execution failed with unknown exception");
   }
 
   return result;

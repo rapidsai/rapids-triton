@@ -90,6 +90,7 @@ struct Batch {
       get_output_shape_{std::move(get_output_shape)},
       report_statistics_{std::move(report_request_statistics)},
       collector_(raw_requests, count, &responses_, &triton_mem_manager, use_pinned_input, stream),
+      retained_output_buffers_{},
       responder_{std::make_shared<BackendOutputResponder>(raw_requests,
                                                           count,
                                                           &responses_,
@@ -217,8 +218,17 @@ struct Batch {
       // non-shared-memory responses.
       final_memory_type = HostMemory;
     }
-    auto buffer = Buffer<T>(buffer_size, final_memory_type, device_id, stream);
-    return OutputTensor<T>(std::move(shape), std::move(buffer), name, responder_);
+    // OutputTensor receives a non-owning view. Keep the allocation alive until
+    // this Batch is destroyed after response processing has completed.
+    auto retained_buffer =
+      std::make_shared<Buffer<T>>(buffer_size, final_memory_type, device_id, stream);
+    auto view = Buffer<T>(retained_buffer->data(),
+                          retained_buffer->size(),
+                          retained_buffer->mem_type(),
+                          retained_buffer->device(),
+                          retained_buffer->stream());
+    retained_output_buffers_.push_back(std::move(retained_buffer));
+    return OutputTensor<T>(std::move(shape), std::move(view), name, responder_);
   }
 
   template <typename T>
@@ -265,6 +275,9 @@ struct Batch {
                      time_point const&)>
     report_statistics_;
   BackendInputCollector collector_;
+  // Declared before responder_ so retained source buffers outlive it. The
+  // buffers are released when this Batch leaves execute().
+  std::vector<std::shared_ptr<void>> retained_output_buffers_;
   std::shared_ptr<BackendOutputResponder> responder_;
   cudaStream_t stream_;
   std::chrono::time_point<std::chrono::steady_clock> start_time_;

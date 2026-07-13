@@ -137,6 +137,17 @@ struct OutputTensor final : BaseTensor<T> {
     : BaseTensor<T>(std::move(shape), std::move(buffer)), name_{name}, responder_{responder}
   {
   }
+
+  OutputTensor(OutputTensor const&) = delete;
+  OutputTensor(OutputTensor&& other)
+    : BaseTensor<T>(other.shape(), std::move(other.buffer())),
+      name_{std::move(other.name_)},
+      responder_{std::move(other.responder_)}
+  {
+  }
+  OutputTensor& operator=(OutputTensor const&) = delete;
+  OutputTensor& operator=(OutputTensor&&) = delete;
+
   /**
    * @brief Prepare final output data from this tensor for responding to
    * request
