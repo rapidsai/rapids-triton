@@ -22,8 +22,11 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+#include <memory>
 #include <rapids_triton/tensor/dtype.hpp>
 #include <rapids_triton/tensor/tensor.hpp>
+#include <type_traits>
+#include <utility>
 #include <vector>
 
 namespace triton {
@@ -138,6 +141,40 @@ TEST(RapidsTriton, tensor_multi_copy)
   // Throw if trying to copy to too many outputs
   receivers.emplace_back(receiver_shape, Buffer<int>{std::size_t{1}, HostMemory});
   EXPECT_THROW(rapids::copy(receivers.begin(), receivers.end(), tensor1), TritonException);
+}
+
+TEST(RapidsTriton, retained_output_buffer_outlives_output_tensor)
+{
+  static_assert(!std::is_copy_constructible_v<OutputTensor<int>>);
+  static_assert(std::is_move_constructible_v<OutputTensor<int>>);
+
+  auto responses = std::vector<TRITONBACKEND_Response*>{};
+  auto responder = std::make_shared<BackendOutputResponder>(
+    nullptr, 0, &responses, 0, nullptr, false, cudaStream_t{});
+  auto expected        = std::vector<int>{1, 2, 3, 4};
+  auto retained_buffer = std::make_shared<Buffer<int>>(expected.size(), HostMemory);
+  auto* source_data    = retained_buffer->data();
+
+  {
+    auto view   = Buffer<int>(source_data,
+                            retained_buffer->size(),
+                            retained_buffer->mem_type(),
+                            retained_buffer->device(),
+                            retained_buffer->stream());
+    auto output = OutputTensor<int>(
+      std::vector<std::size_t>{expected.size()}, std::move(view), "output", responder);
+    std::copy(expected.begin(), expected.end(), source_data);
+    auto moved_output = std::move(output);
+    EXPECT_EQ(moved_output.data(), source_data);
+    moved_output.finalize();
+  }
+
+  EXPECT_EQ(retained_buffer->data(), source_data);
+  auto overwrite = Buffer<int>{expected.size(), HostMemory};
+  EXPECT_NE(overwrite.data(), source_data);
+  std::fill(overwrite.data(), overwrite.data() + overwrite.size(), -1);
+  EXPECT_THAT(std::vector<int>(source_data, source_data + expected.size()),
+              ::testing::ElementsAreArray(expected));
 }
 
 }  // namespace rapids

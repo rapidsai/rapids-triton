@@ -227,7 +227,10 @@ buffer can also be retrieved with the `buffer()` method.
 
 `OutputTensor` objects are used to store data which will eventually be returned
 as part of Triton's response to a client request. Their `finalize` methods are
-used to actually marshal their underlying data into a response.
+used to actually marshal their underlying data into a response. Output tensors
+returned by `get_output` are views into buffers retained by the owning batch
+until asynchronous response processing is complete. An output tensor must not
+be accessed after it has been finalized.
 
 In general, `OutputTensor` objects should not be constructed directly but
 should instead be retrieved using the `get_output` method of a `Model`
